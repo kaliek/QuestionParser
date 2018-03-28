@@ -104,3 +104,4 @@ bin/
 man/
 .DS_Store
 pyvenv.cfg
+*.obj
