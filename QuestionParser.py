@@ -46,6 +46,8 @@ class QuestionParser():
         self.type = ""
         self.structure = []
 
+        self.loc_entity = []
+
 
     def preprocess(self):
         self.correct_sentence()
@@ -109,6 +111,7 @@ class QuestionParser():
                 self.has_per = True
             elif LOC.has_value(ent.label_):
                 self.has_loc = True
+                self.loc_entity.append(ent.text)
             elif OBJ.has_value(ent.label_):
                 self.has_obj = True
             elif TEM.has_value(ent.label_):
@@ -203,6 +206,9 @@ class QuestionParser():
 
     def get_type(self):
         return self.type
+
+    def get_loc_entity(self):
+        return self.loc_entity
 
     def get_has(self, string):
         return 1 if getattr(self, 'has_' + string) else 0
