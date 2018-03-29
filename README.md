@@ -27,8 +27,8 @@ For understanding the question as far as possible, the following features are ex
 
 Method | Train Data Prediction Accuracy | Test Data Prediction Accuracy 
 ------------ | ------------ | -------------
-Multinomial logistic regression | 65% | 62%
-Support vector machine | 65% | 61%
+Multinomial Logistic Regression | 65% | 62%
+Support Vector Machine | 65% | 61%
 
 # To Use
 1. Git clone the repo
