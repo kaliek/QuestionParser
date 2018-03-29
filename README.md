@@ -17,7 +17,7 @@ For understanding the question as far as possible, the following features are ex
   * Part of Speech (POS) tag of word that has `ROOT` dependency 
 ##### By tweaking spaCy:
   * Noun phrases in the question, any phrase in the `subtree` of words that have any `dep_` that is of `SUBJ`, `OBJT`, `NOUN`, `PREP` (see `constant.py` for my Enum classes). It should be more comprehensive than `noun_chunks`.
-  * Neck of the question and its label, second <b>essential</b> element of the question. The label can be a word, a noun phrase, or a noun chunk. I skip any prepositional phrase despite it's included in noun phrases, because I feel prepositonal phrases can be moved around any where in the question.
+  * Neck of the question and its label, second <b>essential</b> element of the question. The neck can be a word, a noun phrase, or a noun chunk, and its label can be the word's dependency, 'np', 'nc' respectively. I skip any prepositional phrase despite it's included in noun phrases, because I feel prepositonal phrases can be moved around any where in the question.
   * Structure of the question, dependency (or noun phrase) order of segmentations of the question. It is shorter than dependency list as some words are marked as noun phrase.
 ##### By exploring machine learning algorithms:
   * Training data of more than 5000 questions labeled with question type (in line with TREC labeling: ABBR, DESC, LOC, HUM, NUM, ENTY). See `corpus/wh_raw_processed.csv` for the data.
