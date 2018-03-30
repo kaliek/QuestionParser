@@ -12,8 +12,8 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from scipy.sparse import csr_matrix
 from constant import *
-from truecaser_test import TrueCaser
-from predict_qn_type import train_data_matrix, predict_data_matrix
+from truecaser import TrueCaser
+from predict_qn_type import transform_data_matrix
 
 class QuestionParser():
     nlp = spacy.load("en")
@@ -21,9 +21,7 @@ class QuestionParser():
     CORPUS_DIR = os.path.join(os.path.dirname(__file__), 'corpus')
     wh_all = pandas.read_csv(os.path.join(CORPUS_DIR, 'wh_raw_processed.csv'))
     y_train = wh_all.pop('Class')
-    X_train = train_data_matrix(wh_all)
-    multinormial = linear_model.LogisticRegression(multi_class = 'multinomial', solver = 'newton-cg').fit(X_train, y_train)
-    svm = LinearSVC().fit(X_train, y_train)
+    wh_all = pandas.DataFrame(wh_all)
     OBJ_PATH = "distributions.obj"
     truecaser = TrueCaser(OBJ_PATH)
 
@@ -78,8 +76,10 @@ class QuestionParser():
             'Root_POS': self.root_pos
         }]
         dta = pandas.DataFrame(qdata_frame)
-        X_predict = predict_data_matrix(self.wh_all, dta)
-        self.type = self.multinormial.predict(X_predict)[0]
+        X_train, X_predict = transform_data_matrix(self.wh_all, dta)
+        multinormial = linear_model.LogisticRegression(multi_class = 'multinomial', solver = 'newton-cg').fit(X_train, self.y_train)
+        # svm = LinearSVC().fit(X_train, y_train)
+        self.type = multinormial.predict(X_predict)[0]
 
 
     """Parsing questions in different ways"""
@@ -217,8 +217,6 @@ class QuestionParser():
     
     def string(self, l):
         return "|".join(l)
-
-
 
 def main():
     question = "Wherw is china?"

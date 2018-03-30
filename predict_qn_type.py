@@ -27,12 +27,22 @@ def train_data_matrix(X_train):
     XT_train = csr_matrix(XT_train)
     return XT_train
 
-def predict_data_matrix(X_train, X_predict):
+def transform_data_matrix(X_train, X_predict):
     X_train = pandas.get_dummies(X_train)
     X_predict = pandas.get_dummies(X_predict)
     X_train_columns = list(X_train.columns)
     X_predict_columns = list(X_predict.columns)
     X_trans_columns = list(set(X_train_columns + X_predict_columns))
+
+    trans_data_train = {}
+    for col in X_trans_columns:
+        if col not in X_train:
+            trans_data_train[col] = [0 for i in range(len(X_train.index))]
+        else:
+            trans_data_train[col] = list(X_train[col])
+    XT_train = pandas.DataFrame(trans_data_train)
+    XT_train = csr_matrix(XT_train)
+   
     trans_data_predict = {}
     for col in X_trans_columns:
         if col not in X_predict:
@@ -41,7 +51,8 @@ def predict_data_matrix(X_train, X_predict):
             trans_data_predict[col] = list(X_predict[col])  # KeyError
     XT_predict = pandas.DataFrame(trans_data_predict)
     XT_predict = csr_matrix(XT_predict)
-    return XT_predict
+    return XT_train, XT_predict
+
 
 def c_model():
     wh_data = pandas.read_csv(os.path.join(CORPUS_DIR, 'wh_raw_processed.csv'))
