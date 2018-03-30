@@ -35,6 +35,7 @@ class QuestionParser():
         self.dep_elements = []
         self.root_pos = ""
         self.noun_phrases = []
+        self.nsubj = ""
         self.noun_chunks = []
         self.neck = ""
         self.neck_label = ""
@@ -96,11 +97,17 @@ class QuestionParser():
         for word in self.question_doc:
             if SUBJ.has_value(word.dep_) or OBJT.has_value(word.dep_) or NOUN.has_value(word.dep_) or PREP.has_value(word.dep_):
                 yield word.subtree
-    
+
+    def iter_nsubj(self):
+        for word in self.question_doc:
+            if word.dep_ == "nsubj":
+                yield word.subtree
+
     def extract_noun_phrase(self):
         for st in self.iter_nps():
             self.noun_phrases.append(" ".join(t.text for t in st))
-
+        for st in self.iter_nsubj():
+            self.nsubj = " ".join(t.text for t in st)
     def extract_noun_chunk(self):
         for nc in self.question_doc.noun_chunks:
             self.noun_chunks.append(nc.text)
@@ -193,7 +200,10 @@ class QuestionParser():
     
     def get_noun_phrase(self):
         return self.noun_phrases
-
+    
+    def get_nsubj(self):
+        return self.nsubj
+    
     def get_noun_chunk(self):
         return self.noun_chunks
     
