@@ -195,7 +195,7 @@ class QuestionParser():
         return self.noun_phrases
 
     def get_noun_chunk(self):
-        return self.noun_chunk
+        return self.noun_chunks
     
     def get_entity(self):
         return self.entity
