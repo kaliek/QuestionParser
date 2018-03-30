@@ -6,7 +6,7 @@ My Final Year Project
 It does not assume question is of standard input, i.e., free of typo and case sensitive.
 
 Uses [language-check](https://github.com/myint/language-check) for correcting any typo, and
-[truecaser](https://github.com/nreimers/truecaser) (converted to Python 3) to convert any caseless / case insensitive word to case sensitive one.
+[truecaser](https://github.com/nreimers/truecaser) (converted to Python 3, and wrapped it with OOP class) to convert any caseless / case insensitive word to case sensitive one.
 
 ### Extract Linguistic Features
 For understanding the question as far as possible, the following features are extracted:
@@ -44,7 +44,7 @@ python -m spacy download en
 5. Download [english_distributions.obj.zip](https://github.com/nreimers/truecaser/releases), and add the unziped file to your directory
 6. Example:
 ```
-from QuestionParser import QuestionParser
+from questionparser import QuestionParser
 question = "Whar is a question parser?"
 qp = QuestionParser(question)
 qp.preprocess()

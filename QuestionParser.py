@@ -12,7 +12,7 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from scipy.sparse import csr_matrix
 from constant import *
-from Truecaser import *
+from truecaser_test import TrueCaser
 from predict_qn_type import train_data_matrix, predict_data_matrix
 
 class QuestionParser():
@@ -24,6 +24,8 @@ class QuestionParser():
     X_train = train_data_matrix(wh_all)
     multinormial = linear_model.LogisticRegression(multi_class = 'multinomial', solver = 'newton-cg').fit(X_train, y_train)
     svm = LinearSVC().fit(X_train, y_train)
+    OBJ_PATH = "distributions.obj"
+    truecaser = TrueCaser(OBJ_PATH)
 
     def __init__(self, question):
         self.question = question
@@ -171,7 +173,7 @@ class QuestionParser():
         print("trying truecase: ")
         tokens = nltk.word_tokenize(self.question)
         tokens = [token.lower() for token in tokens]
-        self.question = " ".join(getTrueCase(tokens))
+        self.question = " ".join(self.truecaser.getTrueCase(tokens))
         print(self.question)
     
     def get_head(self):
@@ -219,7 +221,7 @@ class QuestionParser():
 
 
 def main():
-    question = "Hoq did serfdom develop in and then leave the stupid russia ?"
+    question = "Wherw is china?"
     qpp = QuestionParser(question)
     qpp.preprocess()
     print(qpp.get_type())
