@@ -48,7 +48,7 @@ python -m spacy download en
 from questionparser import QuestionParser
 question = "Whar is a question parser?"
 qp = QuestionParser(question)
-qp.preprocess()
+qp.parse()
 print(qp.get_type()) #'DESC'
 ```
 
