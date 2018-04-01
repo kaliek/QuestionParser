@@ -1,27 +1,14 @@
 import spacy
 import language_check
 import nltk
-from nltk.metrics import edit_distance
 import pandas
-import csv
-import random
-import os
-from sklearn.svm import LinearSVC
-from sklearn import linear_model
-from sklearn import metrics
-from sklearn.model_selection import train_test_split
-from scipy.sparse import csr_matrix
 from constant import *
 from truecaser import TrueCaser
-from predict_qn_type import transform_data_matrix
+from predict_qn_type import get_predict_data, multinomial_regression#, support_vector_machine
 
 class QuestionParser():
     nlp = spacy.load("en")
     tool = language_check.LanguageTool('en-US')
-    CORPUS_DIR = os.path.join(os.path.dirname(__file__), 'corpus')
-    wh_all = pandas.read_csv(os.path.join(CORPUS_DIR, 'wh_raw_processed.csv'))
-    y_train = wh_all.pop('Class')
-    wh_all = pandas.DataFrame(wh_all)
     OBJ_PATH = "distributions.obj"
     truecaser = TrueCaser(OBJ_PATH)
 
@@ -33,6 +20,7 @@ class QuestionParser():
         self.entity = []
         self.entity_label = []
         self.dep_elements = []
+        self.head_pos = ""
         self.root_pos = ""
         self.noun_phrases = []
         self.nsubj = ""
@@ -46,9 +34,12 @@ class QuestionParser():
         self.has_num = False
         self.type = ""
         self.structure = []
-
         self.loc_entity = []
+        self.predict_dta = None
 
+    def parse(self):
+        self.preprocess()
+        self.extract_all()
 
     def preprocess(self):
         self.correct_sentence()
@@ -56,16 +47,20 @@ class QuestionParser():
         self.question_list = [t.text for t in self.nlp(self.question)]
         self.question_head = self.question_list[0]
         self.question_doc = self.nlp(self.question)
+
+    def extract_all(self):
         self.extract_dep()
+        self.extract_head_pos()
         self.extract_noun_phrase()
         self.extract_noun_chunk()
         self.extract_entity()
         self.extract_neck()
         self.extract_structure()
-        self.predict_type()
+        self.extract_predict_dta()
+        self.extract_type()
 
     """Machine learning algo to predict the question type"""
-    def predict_type(self):
+    def extract_predict_dta(self):
         qdata_frame = [{
             'Head': self.question_head,
             'Neck_Label': self.neck_label,
@@ -77,11 +72,11 @@ class QuestionParser():
             'Root_POS': self.root_pos
         }]
         dta = pandas.DataFrame(qdata_frame)
-        X_train, X_predict = transform_data_matrix(self.wh_all, dta)
-        multinormial = linear_model.LogisticRegression(multi_class = 'multinomial', solver = 'newton-cg').fit(X_train, self.y_train)
-        # svm = LinearSVC().fit(X_train, y_train)
-        self.type = multinormial.predict(X_predict)[0]
+        self.predict_dta = dta
 
+    def extract_type(self):
+        X_train, y_train, X_predict = get_predict_data(self.predict_dta)
+        self.type = multinomial_regression(X_train, y_train, X_predict)
 
     """Parsing questions in different ways"""
     def extract_details(self):
@@ -92,6 +87,9 @@ class QuestionParser():
         for t in self.question_doc:
             if ROOT.has_value(t.dep_): self.root_pos = t.tag_
             self.dep_elements.append(t.dep_)
+
+    def extract_head_pos(self):
+        self.head_pos = self.question_doc[0].tag_
 
     def iter_nps(self):
         for word in self.question_doc:
@@ -111,7 +109,7 @@ class QuestionParser():
     def extract_noun_chunk(self):
         for nc in self.question_doc.noun_chunks:
             self.noun_chunks.append(nc.text)
-    
+
     def extract_entity(self):
         for ent in self.question_doc.ents:
             self.entity.append(ent.text)
@@ -135,7 +133,8 @@ class QuestionParser():
             self.neck_label = self.dep_elements[1]
             for np in self.noun_phrases:
                 if self.neck in np.split():
-                    if PREP.has_value(self.neck_label): continue
+                    if PREP.has_value(self.neck_label):
+                        continue
                     else:
                         self.neck = np
                         self.neck_label = "np"
@@ -156,18 +155,17 @@ class QuestionParser():
             if not nps:
                 structure.append(self.question_doc[i].dep_)
                 i += 1
-            else: 
+            else:
                 first_list = nps[0].split()
                 length = len(first_list)
                 if self.question_doc[i].text in first_list:
                     structure.append('np')
                     i += length
                     nps.pop(0)
-                else: 
+                else:
                     structure.append(self.question_doc[i].dep_)
                     i += 1
         self.structure = structure
-    
 
     """Correct the typo and caseless words if the question contains"""
     def correct_sentence(self):
@@ -182,34 +180,37 @@ class QuestionParser():
         tokens = [token.lower() for token in tokens]
         self.question = " ".join(self.truecaser.getTrueCase(tokens))
         print(self.question)
-    
+
     def get_head(self):
         return self.question_head
-    
+
+    def get_head_pos(self):
+        return self.head_pos
+
     def get_neck(self):
         return self.neck
-    
+
     def get_neck_label(self):
         return self.neck_label
-    
+
     def get_dep(self):
         return self.dep_elements
 
     def get_root_pos(self):
         return self.root_pos
-    
+
     def get_noun_phrase(self):
         return self.noun_phrases
-    
+
     def get_nsubj(self):
         return self.nsubj
-    
+
     def get_noun_chunk(self):
         return self.noun_chunks
-    
+
     def get_entity(self):
         return self.entity
-    
+
     def get_entity_label(self):
         return self.entity_label
 
@@ -224,20 +225,18 @@ class QuestionParser():
 
     def get_has(self, string):
         return 1 if getattr(self, 'has_' + string) else 0
-    
+
     def string(self, l):
         return "|".join(l)
 
-def main():
-    question = "Wherw is china?"
-    qpp = QuestionParser(question)
-    qpp.preprocess()
-    print(qpp.get_type())
+# def main():
+#     question = "Wherw is china?"
+#     qpp = QuestionParser(question)
+#     qpp.parse()
+#     print(qpp.get_type())
 
+# def run():
+#     main()
 
-def run():
-    main()
-
-
-if __name__ == "__main__":
-    run()
+# if __name__ == "__main__":
+#     run()
