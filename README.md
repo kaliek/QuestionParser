@@ -16,21 +16,23 @@ For understanding the question as far as possible, the following features are ex
   * Entities in the question, I categorise the [18 entities](https://spacy.io/api/annotation#named-entities) into `PER`, `LOC`, `OBJ`, `TEM`, `NUM`
   * Part of Speech (POS) tag of the first word and the word that has `ROOT` dependency
 ##### By tweaking spaCy:
-  * Noun phrases in the question, any phrase in the `subtree` of words that have any `dep_` that is of `SUBJ`, `OBJT`, `NOUN`, `PREP` (see `constant.py` for my Enum classes). It should be more comprehensive than `noun_chunks`.
-  * Neck of the question and its label, second <b>essential</b> element of the question. The neck can be a word, a noun phrase, or a noun chunk, and its label can be the word's dependency, 'np', 'nc' respectively. I skip any prepositional phrase despite it's included in noun phrases, because I feel prepositonal phrases can be moved around any where in the question.
-  * Structure of the question, dependency (or noun phrase) order of segmentations of the question. It is shorter than dependency list as some words are marked as noun phrase.
+  * Subject phrase of the question, extracted by traversing through the subtree of word that has `SUBJ` dependency
+  * Prepositional phrases of the question, extracted by traversing through the subtree of word that has `SUBJ` dependency 
+  * Object phrase of the question, extracted by traversing through the subtree of word that has `OBJT` dependency
+  * Syntax of the question, subject-root-object order of segmentations of the question. Other types of syntactical dependencies such as prepositional phrases are reserved as well. (Note: as prepositional phrases might contain subject phrase and object phrases, I labeled the syntax in order of `sbjt`, `prep`, `objt`, and the rest. Please see `extract_structure` method in `QuestionParser` class for more details.)
+  * Syntactical element of the neck of the question, second element of the syntax structure.
 ##### By exploring machine learning algorithms:
   * Training data of more than 5000 questions labeled with question type (in line with TREC labeling: ABBR, DESC, LOC, HUM, NUM, ENTY). See `corpus/wh_raw_processed.csv` for the data.
-  * Main predictors: `Head`,`Head_POS`, `Neck_label`, `PER` (if has entity in `PER` category), `LOC`, `OBJ`, `TEM`, `NUM`, `ROOT_POS`
+  * Main predictors: `Head`,`Head_POS`, `Neck_label`, `PER` (if has entity in `PER` category), `LOC`, `OBJ`, `TEM`, `NUM`, `ROOT_POS`, `Syntax`
   * To predict: `Class` (type of the question)
   * Algorithms used: multinomial logistic regression, support vector machine. See `predict_qn_type.py` for more details.
-  * Use `build_train_data.py` to build your own training data and compare the accuracy of different models
+  * Use `build_train_data.py` to build your own training data and compare the accuracy of different models. The accuracy my models obtained is as follows (80% train data, 20% test data):
 
 Method | Train Data Prediction Accuracy | Test Data Prediction Accuracy 
 ------------ | ------------ | -------------
-Multinomial Logistic Regression | 63% | 65%
-Support Vector Machine | 63% | 63%
-
+Multinomial Logistic Regression | 70.0% | 65.2%
+Support Vector Machine | 71.7% | 64.8%
+  * As multinomial logistic regression gives me a slightly better test data prediction accuracy, I use it to find question type for new data. Please see `extract_type` in `QuestionParser` class for more details.
 # To Use
 1. Git clone the repo
 2. Use [Python 3 venv](https://docs.python.org/3/library/venv.html)

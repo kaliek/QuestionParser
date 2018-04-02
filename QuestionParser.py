@@ -22,10 +22,11 @@ class QuestionParser():
         self.dep_elements = []
         self.head_pos = ""
         self.root_pos = ""
-        self.noun_phrases = []
-        self.nsubj = ""
+        self.prep = []
+        self.sbjt = []
+        self.objt = []
+        self.nsbjt = ""
         self.noun_chunks = []
-        self.neck = ""
         self.neck_label = ""
         self.has_per = False
         self.has_loc = False
@@ -33,7 +34,7 @@ class QuestionParser():
         self.has_tem = False
         self.has_num = False
         self.type = ""
-        self.structure = []
+        self.structure = {}
         self.loc_entity = []
         self.predict_dta = None
 
@@ -42,8 +43,8 @@ class QuestionParser():
         self.extract_all()
 
     def preprocess(self):
-        self.correct_sentence()
-        self.try_truecaser()
+        #self.correct_sentence()
+        #self.try_truecaser()
         self.question_list = [t.text for t in self.nlp(self.question)]
         self.question_head = self.question_list[0]
         self.question_doc = self.nlp(self.question)
@@ -51,11 +52,10 @@ class QuestionParser():
     def extract_all(self):
         self.extract_dep()
         self.extract_head_pos()
-        self.extract_noun_phrase()
         self.extract_noun_chunk()
+        self.extract_structure()
         self.extract_entity()
         self.extract_neck()
-        self.extract_structure()
         self.extract_predict_dta()
         self.extract_type()
 
@@ -91,21 +91,52 @@ class QuestionParser():
     def extract_head_pos(self):
         self.head_pos = self.question_doc[0].tag_
 
-    def iter_nps(self):
-        for word in self.question_doc:
-            if SUBJ.has_value(word.dep_) or OBJT.has_value(word.dep_) or NOUN.has_value(word.dep_) or PREP.has_value(word.dep_):
-                yield word.subtree
+    def extract_structure(self):
+        self.iterate_sbjt()
+        self.iterate_prep()
+        self.iterate_objt()
+        self.iterate_others()
 
-    def iter_nsubj(self):
-        for word in self.question_doc:
-            if word.dep_ == "nsubj":
-                yield word.subtree
+    def iterate_sbjt(self):
+        for i in range(len(self.question_doc)):
+            token = self.question_doc[i]
+            if SUBJ.has_value(token.dep_):
+                sbjt_list = [w.text_with_ws.strip() for w in token.subtree]
+                self.label(i, token.text, sbjt_list, 'sbjt')
+                self.sbjt.append(" ".join(sbjt_list))
 
-    def extract_noun_phrase(self):
-        for st in self.iter_nps():
-            self.noun_phrases.append(" ".join(t.text for t in st))
-        for st in self.iter_nsubj():
-            self.nsubj = " ".join(t.text for t in st)
+    def iterate_prep(self):
+        for i in range(len(self.question_doc)):
+            token = self.question_doc[i]
+            if PREP.has_value(token.dep_):
+                prep_list = [tok.orth_ for tok in token.subtree]
+                # prep_list = [w.text_with_ws.strip() for w in token.subtree]
+                self.label(i, token.text, prep_list, 'prep')
+                self.prep.append(" ".join(prep_list))
+
+    def iterate_objt(self):
+        for i in range(len(self.question_doc)):
+            token = self.question_doc[i]
+            if OBJT.has_value(token.dep_):
+                objt_list = [w.text_with_ws.strip() for w in token.subtree]
+                self.label(i, token.text, objt_list, 'objt')
+                self.objt.append(" ".join(objt_list))
+
+    def iterate_others(self):
+        for i in range(len(self.question_doc)):
+            token = self.question_doc[i]
+            if self.structure.get(i) is None:
+                self.structure[i] = token.dep_
+
+    def label(self, i, text, l, string):
+        index = l.index(text)
+        for j in range(index+1):
+            if self.structure.get(i-j) is None:
+                self.structure[i-j] = string
+        for j in range(1, len(l)-index):
+            if self.structure.get(i+j) is None:
+                self.structure[i+j] = string
+
     def extract_noun_chunk(self):
         for nc in self.question_doc.noun_chunks:
             self.noun_chunks.append(nc.text)
@@ -128,44 +159,7 @@ class QuestionParser():
 
     # Neck means the phrase/word closest to first word in the question
     def extract_neck(self):
-        if self.question_doc:
-            self.neck = self.question_doc[1].text
-            self.neck_label = self.dep_elements[1]
-            for np in self.noun_phrases:
-                if self.neck in np.split():
-                    if PREP.has_value(self.neck_label):
-                        continue
-                    else:
-                        self.neck = np
-                        self.neck_label = "np"
-                        break
-            if self.neck == self.question_doc[1].text:
-                if self.noun_chunks: #assume noun_chunks does not contain prep phrase
-                    if self.neck in self.noun_chunks[0].split():
-                        self.neck = self.noun_chunks[0]
-                        self.neck_label = "nc"
-
-    # Break the question into different parts
-    def extract_structure(self):
-        structure = []
-        nps = self.noun_phrases
-        length_doc = len(self.question_doc)
-        i = 0
-        while i < length_doc:
-            if not nps:
-                structure.append(self.question_doc[i].dep_)
-                i += 1
-            else:
-                first_list = nps[0].split()
-                length = len(first_list)
-                if self.question_doc[i].text in first_list:
-                    structure.append('np')
-                    i += length
-                    nps.pop(0)
-                else:
-                    structure.append(self.question_doc[i].dep_)
-                    i += 1
-        self.structure = structure
+        self.neck_label = self.structure[1]
 
     """Correct the typo and caseless words if the question contains"""
     def correct_sentence(self):
@@ -199,11 +193,17 @@ class QuestionParser():
     def get_root_pos(self):
         return self.root_pos
 
-    def get_noun_phrase(self):
-        return self.noun_phrases
+    def get_prep(self):
+        return self.prep
 
-    def get_nsubj(self):
-        return self.nsubj
+    def get_sbjt(self):
+        return self.sbjt
+
+    def get_objt(self):
+        return self.objt
+
+    def get_nsbjt(self):
+        return self.nsbjt
 
     def get_noun_chunk(self):
         return self.noun_chunks
@@ -215,7 +215,14 @@ class QuestionParser():
         return self.entity_label
 
     def get_structure(self):
-        return self.structure
+        structure = []
+        for (key, value) in sorted(self.structure.items()):
+            if structure:
+                if structure[len(structure) - 1] != value:
+                    structure.append(value)
+            else:
+                structure.append(value)
+        return structure
 
     def get_type(self):
         return self.type
@@ -229,14 +236,20 @@ class QuestionParser():
     def string(self, l):
         return "|".join(l)
 
-# def main():
-#     question = "Wherw is china?"
-#     qpp = QuestionParser(question)
-#     qpp.parse()
-#     print(qpp.get_type())
+def main():
+    question = "What on the earth are the wonders of the stupid china"
+    qpp = QuestionParser(question)
+    qpp.parse()
+    qpp.extract_details()
+    print(qpp.get_type())
+    print(qpp.get_noun_chunk())
+    print(qpp.get_structure())
+    print(qpp.get_sbjt())
+    print(qpp.get_objt())
+    print(qpp.get_prep())
 
-# def run():
-#     main()
+def run():
+    main()
 
-# if __name__ == "__main__":
-#     run()
+if __name__ == "__main__":
+    run()
