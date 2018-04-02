@@ -25,13 +25,14 @@ For understanding the question as far as possible, the following features are ex
   * Training data of more than 5000 questions labeled with question type (in line with TREC labeling: ABBR, DESC, LOC, HUM, NUM, ENTY). See `corpus/wh_raw_processed.csv` for the data.
   * Main predictors: `Head`,`Head_POS`, `Neck_label`, `PER` (if has entity in `PER` category), `LOC`, `OBJ`, `TEM`, `NUM`, `ROOT_POS`, `Syntax`
   * To predict: `Class` (type of the question)
-  * Algorithms used: multinomial logistic regression, support vector machine. See `predict_qn_type.py` for more details.
+  * Algorithms used: multinomial logistic regression, support vector machine, decision tree. See `predict_qn_type.py` for more details.
   * Use `build_train_data.py` to build your own training data and compare the accuracy of different models. The accuracy my models obtained is as follows (80% train data, 20% test data):
 
 Method | Train Data Prediction Accuracy | Test Data Prediction Accuracy 
 ------------ | ------------ | -------------
 Multinomial Logistic Regression | 70.0% | 65.2%
 Support Vector Machine | 71.7% | 64.8%
+Decision Tree (used only wh questions) | 61.3% | 62.2%
   * As multinomial logistic regression gives me a slightly better test data prediction accuracy, I use it to find question type for new data. Please see `extract_type` in `QuestionParser` class for more details.
 # To Use
 1. Git clone the repo

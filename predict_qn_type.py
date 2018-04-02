@@ -15,6 +15,33 @@ def multinomial_regression(X_train, y, X_predict):
     prediction = model.predict(X_predict)
     return prediction[0]
 
+def decision_tree(head, neck_label, root_pos, loc):
+    if head == 'who':
+        return 'HUM'
+    else
+        if head == 'how':
+            if neck_label == 'aux':
+                return 'DESC'
+            else:
+                return 'NUM'
+        elif head == 'when':
+            return 'NUM'
+        elif head == 'where':
+            return 'LOC'
+        else:
+            neck_set = ['ROOT', 'advmod', 'aux', 'auxpass', 'ccomp', 'intj', 'npadvmod', 'prep']
+            if neck_label in neck_set:
+                return 'DESC'
+            else:
+                root_set = ['NNP', 'UH', 'VBD', 'VBG']
+                if root_pos in root_set:
+                    return 'HUM'
+                else:
+                    if loc:
+                        return 'LOC'
+                    else:
+                        return 'ENTY'
+
 def transform_data_matrix(X_train, X_predict):
     X_train = pandas.get_dummies(X_train)
     X_predict = pandas.get_dummies(X_predict)
