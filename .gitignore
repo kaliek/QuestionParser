@@ -106,3 +106,4 @@ man/
 pyvenv.cfg
 *.obj
 old/
+googlemap_api.txt
