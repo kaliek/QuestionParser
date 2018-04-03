@@ -35,9 +35,9 @@ class NUM(Enumnum):
     CAR = "CARDINAL" # Numerals that do not fall under another type.
 
  
-class AUXI(Enumnum):
-    AUX         = "aux"
-    AUXPASS     = "auxpass" 
+# class AUXI(Enumnum):
+#     AUX         = "aux"
+#     AUXPASS     = "auxpass" 
 
 class SUBJ(Enumnum):
     AGENT       = "agent"
@@ -54,34 +54,34 @@ class OBJT(Enumnum):
     OPRD        = "oprd"
     POBJ        = "pobj"
 
-class NOUN(Enumnum):
-    NPADVMOD    = "npadvmod"
-    COMPOUND    = "compound"
-    NP          = "np"
-    NC          = "nc"
+# class NOUN(Enumnum):
+#     NPADVMOD    = "npadvmod"
+#     COMPOUND    = "compound"
+#     NP          = "np"
+#     NC          = "nc"
 
-class ADJT(Enumnum):
-    ACOMP       = "acomp"
-    AMOD        = "amod"
-    ADVMOD      = "advmod"
-    CCOMP       = "ccomp"
+# class ADJT(Enumnum):
+#     ACOMP       = "acomp"
+#     AMOD        = "amod"
+#     ADVMOD      = "advmod"
+#     CCOMP       = "ccomp"
 
 class PREP(Enumnum):
     PREP        = "prep"
 class ROOT(Enumnum):
     ROOT        = "ROOT"
 
-class HEAD(Enumnum):
-    ADVMOD      = "advmod"
+# class HEAD(Enumnum):
+#     ADVMOD      = "advmod"
 
 
-class WHHead(Enumnum):
-    WHAT    = "what"
-    WHO     = "who"
-    WHOM    = "whom"
-    WHOSE   = "whose"
-    WHERE   = "where"
-    WHICH   = "which"
-    WHY     = "why"
-    WHEN    = "when"
-    HOW     = "how"
+# class WHHead(Enumnum):
+#     WHAT    = "what"
+#     WHO     = "who"
+#     WHOM    = "whom"
+#     WHOSE   = "whose"
+#     WHERE   = "where"
+#     WHICH   = "which"
+#     WHY     = "why"
+#     WHEN    = "when"
+#     HOW     = "how"

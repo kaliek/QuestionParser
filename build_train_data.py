@@ -41,8 +41,8 @@ def build_data():
             qpp = QuestionParser(question)
             qpp.parse()
             result = [question, label, qpp.get_head(),
-                qpp.get_head_pos(), qpp.get_neck_label(), qpp.get_root_pos(), " ".join(qpp.get_structure()),
-                qpp.get_has('per'), qpp.get_has('loc'), qpp.get_has('obj'), qpp.get_has('tem'), qpp.get_has('num')]
+                qpp.get_word('head'), qpp.get_word('neck'), qpp.get_word('root'), " ".join(qpp.get_syntax()),
+                qpp.has_entity('per'), qpp.has_entity('loc'), qpp.has_entity('obj'), qpp.has_entity('tem'), qpp.has_entity('num')]
             print(result)
             writer.writerow(result)
 
