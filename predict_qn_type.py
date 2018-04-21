@@ -72,7 +72,7 @@ def transform_data_matrix(X_train, X_predict):
 
 def get_predict_data(predict_dta):
     CORPUS_DIR = os.path.join(os.path.dirname(__file__), 'corpus')
-    wh_all = pandas.read_csv(os.path.join(CORPUS_DIR, 'all_raw_1.csv'))
+    wh_all = pandas.read_csv(os.path.join(CORPUS_DIR, 'train_5500_features copy.csv'))
     y_train = wh_all.pop('Class')
     wh_all.pop('Question')
     wh_all = pandas.DataFrame(wh_all)

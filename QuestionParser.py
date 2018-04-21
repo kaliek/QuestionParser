@@ -5,6 +5,7 @@ import pandas
 from constant import *
 from truecaser import TrueCaser
 from predict_qn_type import get_predict_data, multinomial_regression#, support_vector_machine
+from q_head import correction
 
 class QuestionParser():
     nlp = spacy.load("en")
@@ -29,7 +30,7 @@ class QuestionParser():
 
     def preprocess(self):
         self.correct_sentence()
-        self.try_truecaser()
+        # self.try_truecaser()
         self.question_doc = self.nlp(self.question)
         self.question_head = self.question_doc[0].text
 
@@ -48,13 +49,15 @@ class QuestionParser():
     def extract_predict_dta(self):
         qdata_frame = [{
             'Head': self.question_head,
+            'Head_POS': self.get_word('head'),
             'Neck_Label': self.get_word('neck'),
             'PER': self.has_entity('per'),
             'LOC': self.has_entity('loc'),
             'OBJ': self.has_entity('obj'),
             'TEM': self.has_entity('tem'),
             'NUM': self.has_entity('num'),
-            'Root_POS': self.get_word('root')
+            'Root_POS': self.get_word('root'),
+            'Syntax': " ".join(self.get_syntax())
         }]
         dta = pandas.DataFrame(qdata_frame)
         self.predict_dta = dta
@@ -133,17 +136,17 @@ class QuestionParser():
 
     ####### Preprocess Methods #######
     def correct_sentence(self):
-        print("correcting sentence: ")
         matches = self.tool.check(self.question)
-        self.question = language_check.correct(self.question, matches)
+        corrected = language_check.correct(self.question, matches).split()
+        print(corrected[0])
+        corrected[0] = correction(corrected[0]).title()
+        self.question = " ".join(corrected)
         print(self.question)
 
     def try_truecaser(self):
-        print("trying truecase: ")
         tokens = nltk.word_tokenize(self.question)
         tokens = [token.lower() for token in tokens]
         self.question = " ".join(self.truecaser.getTrueCase(tokens))
-        print(self.question)
 
     ####### Getter Methods #######
     def get_head(self):
@@ -178,14 +181,24 @@ class QuestionParser():
     def string(self, l):
         return "|".join(l)
 
+# import csv 
 # def main():
-#     question = "What on the earth are the wonders of the stupid china"
-#     qpp = QuestionParser(question)
-#     qpp.parse()
-#     qpp.extract_details()
-#     print(qpp.get_phrase('sbjt'))
-#     print(qpp.get_type())
-#     print(qpp.get_syntax())
+#     with open("corpus/test.csv", "r") as inputfile, open("corpus/test_raw.csv", "w") as outputfile:
+#         reader = csv.reader(inputfile)
+#         writer = csv.writer(outputfile)
+#         for line in reader:
+#             q = line[0]
+#             qpp = QuestionParser(q)
+#             qpp.parse()
+#             result = [q, qpp.get_type(), qpp.get_head(),
+#                 qpp.get_word('head'), qpp.get_word('neck'), qpp.get_word('root'), " ".join(qpp.get_syntax()),
+#                 qpp.has_entity('per'), qpp.has_entity('loc'), qpp.has_entity('obj'), qpp.has_entity('tem'), qpp.has_entity('num')]
+#             writer.writerow(result)
+# def main():
+#     question = "where is Singapore?"
+#     qp = QuestionParser(question)
+#     qp.parse()
+#     print(qp.get_type())
 
 # def run():
 #     main()
